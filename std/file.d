@@ -92,6 +92,11 @@ else version(Posix)
     package enum system_directory = "/usr/include";
     package enum system_file      = "/usr/include/assert.h";
 }
+else version(Windows)
+{
+    package enum system_directory = "C:\\Program Files\\";
+    package enum system_file = "C:\\Windows\\system.ini";
+}
 
 
 /++
@@ -1686,36 +1691,20 @@ unittest
 
 @safe unittest
 {
-    version(Windows)
-    {
-        if ("C:\\Program Files\\".exists)
-            assert("C:\\Program Files\\".isDir);
+    if (system_directory.exists)
+        assert(system_directory.isDir);
 
-        if ("C:\\Windows\\system.ini".exists)
-            assert(!"C:\\Windows\\system.ini".isDir);
-    }
-    else version(Posix)
-    {
-        if (system_directory.exists)
-            assert(system_directory.isDir);
-
-        if (system_file.exists)
-            assert(!system_file.isDir);
-    }
+    if (system_file.exists)
+        assert(!system_file.isDir);
 }
 
 unittest
 {
-    version(Windows)
-        enum dir = "C:\\Program Files\\";
-    else version(Posix)
-        enum dir = system_directory;
-
-    if (dir.exists)
+    if (system_directory.exists)
     {
-        DirEntry de = DirEntry(dir);
+        DirEntry de = DirEntry(system_directory);
         assert(de.isDir);
-        assert(DirEntry(dir).isDir);
+        assert(DirEntry(system_directory).isDir);
     }
 }
 
@@ -1748,33 +1737,16 @@ bool attrIsDir(uint attributes) @safe pure nothrow @nogc
 
 @safe unittest
 {
-    version(Windows)
+    if (system_directory.exists)
     {
-        if ("C:\\Program Files\\".exists)
-        {
-            assert(attrIsDir(getAttributes("C:\\Program Files\\")));
-            assert(attrIsDir(getLinkAttributes("C:\\Program Files\\")));
-        }
-
-        if ("C:\\Windows\\system.ini".exists)
-        {
-            assert(!attrIsDir(getAttributes("C:\\Windows\\system.ini")));
-            assert(!attrIsDir(getLinkAttributes("C:\\Windows\\system.ini")));
-        }
+        assert(attrIsDir(getAttributes(system_directory)));
+        assert(attrIsDir(getLinkAttributes(system_directory)));
     }
-    else version(Posix)
-    {
-        if (system_directory.exists)
-        {
-            assert(attrIsDir(getAttributes(system_directory)));
-            assert(attrIsDir(getLinkAttributes(system_directory)));
-        }
 
-        if (system_file.exists)
-        {
-            assert(!attrIsDir(getAttributes(system_file)));
-            assert(!attrIsDir(getLinkAttributes(system_file)));
-        }
+    if (system_file.exists)
+    {
+        assert(!attrIsDir(getAttributes(system_file)));
+        assert(!attrIsDir(getLinkAttributes(system_file)));
     }
 }
 
@@ -1838,22 +1810,11 @@ unittest
 
 @safe unittest
 {
-    version(Windows)
-    {
-        if ("C:\\Program Files\\".exists)
-            assert(!"C:\\Program Files\\".isFile);
+    if (system_directory.exists)
+        assert(!system_directory.isFile);
 
-        if ("C:\\Windows\\system.ini".exists)
-            assert("C:\\Windows\\system.ini".isFile);
-    }
-    else version(Posix)
-    {
-        if (system_directory.exists)
-            assert(!system_directory.isFile);
-
-        if (system_file.exists)
-            assert(system_file.isFile);
-    }
+    if (system_file.exists)
+        assert(system_file.isFile);
 }
 
 
@@ -1897,33 +1858,16 @@ bool attrIsFile(uint attributes) @safe pure nothrow @nogc
 
 @safe unittest
 {
-    version(Windows)
+    if (system_directory.exists)
     {
-        if ("C:\\Program Files\\".exists)
-        {
-            assert(!attrIsFile(getAttributes("C:\\Program Files\\")));
-            assert(!attrIsFile(getLinkAttributes("C:\\Program Files\\")));
-        }
-
-        if ("C:\\Windows\\system.ini".exists)
-        {
-            assert(attrIsFile(getAttributes("C:\\Windows\\system.ini")));
-            assert(attrIsFile(getLinkAttributes("C:\\Windows\\system.ini")));
-        }
+        assert(!attrIsFile(getAttributes(system_directory)));
+        assert(!attrIsFile(getLinkAttributes(system_directory)));
     }
-    else version(Posix)
-    {
-        if (system_directory.exists)
-        {
-            assert(!attrIsFile(getAttributes(system_directory)));
-            assert(!attrIsFile(getLinkAttributes(system_directory)));
-        }
 
-        if (system_file.exists)
-        {
-            assert(attrIsFile(getAttributes(system_file)));
-            assert(attrIsFile(getLinkAttributes(system_file)));
-        }
+    if (system_file.exists)
+    {
+        assert(attrIsFile(getAttributes(system_file)));
+        assert(attrIsFile(getLinkAttributes(system_file)));
     }
 }
 
@@ -1968,27 +1912,25 @@ unittest
 {
     version(Windows)
     {
-        if ("C:\\Program Files\\".exists)
-            assert(!"C:\\Program Files\\".isSymlink);
+        if (system_directory.exists)
+            assert(!system_directory.isSymlink);
 
         if ("C:\\Users\\".exists && "C:\\Documents and Settings\\".exists)
             assert("C:\\Documents and Settings\\".isSymlink);
 
-        enum fakeSymFile = "C:\\Windows\\system.ini";
-        if (fakeSymFile.exists)
+        if (system_file.exists)
         {
-            assert(!fakeSymFile.isSymlink);
+            assert(!system_file.isSymlink);
 
-            assert(!fakeSymFile.isSymlink);
-            assert(!attrIsSymlink(getAttributes(fakeSymFile)));
-            assert(!attrIsSymlink(getLinkAttributes(fakeSymFile)));
+            assert(!attrIsSymlink(getAttributes(system_file)));
+            assert(!attrIsSymlink(getLinkAttributes(system_file)));
 
-            assert(attrIsFile(getAttributes(fakeSymFile)));
-            assert(attrIsFile(getLinkAttributes(fakeSymFile)));
-            assert(!attrIsDir(getAttributes(fakeSymFile)));
-            assert(!attrIsDir(getLinkAttributes(fakeSymFile)));
+            assert(attrIsFile(getAttributes(system_file)));
+            assert(attrIsFile(getLinkAttributes(system_file)));
+            assert(!attrIsDir(getAttributes(system_file)));
+            assert(!attrIsDir(getLinkAttributes(system_file)));
 
-            assert(getAttributes(fakeSymFile) == getLinkAttributes(fakeSymFile));
+            assert(getAttributes(system_file) == getLinkAttributes(system_file));
         }
     }
     else version(Posix)
@@ -3108,9 +3050,9 @@ unittest
 {
     version(Windows)
     {
-        if ("C:\\Program Files\\".exists)
+        if (system_directory.exists)
         {
-            auto de = DirEntry("C:\\Program Files\\");
+            auto de = DirEntry(system_directory);
             assert(!de.isFile);
             assert(de.isDir);
             assert(!de.isSymlink);
@@ -3122,9 +3064,9 @@ unittest
             assert(de.isSymlink);
         }
 
-        if ("C:\\Windows\\system.ini".exists)
+        if (system_file.exists)
         {
-            auto de = DirEntry("C:\\Windows\\system.ini");
+            auto de = DirEntry(system_file);
             assert(de.isFile);
             assert(!de.isDir);
             assert(!de.isSymlink);
