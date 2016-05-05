@@ -2257,7 +2257,7 @@ version(StdDdoc) void symlink(RO, RL)(RO original, RL link)
             isConvertibleToString!RO) &&
         (isInputRange!RL && isSomeChar!(ElementEncodingType!RL) ||
             isConvertibleToString!RL));
-else version(Posix) void symlink(RO, RL)(RO original, RL link)
+else void symlink(RO, RL)(RO original, RL link)
     if ((isInputRange!RO && isSomeChar!(ElementEncodingType!RO) ||
             isConvertibleToString!RO) &&
         (isInputRange!RL && isSomeChar!(ElementEncodingType!RL) ||
@@ -2273,13 +2273,31 @@ else version(Posix) void symlink(RO, RL)(RO original, RL link)
     {
         auto oz = original.tempCString();
         auto lz = link.tempCString();
-        alias posixSymlink = core.sys.posix.unistd.symlink;
-        immutable int result = () @trusted { return posixSymlink(oz, lz); } ();
-        cenforce(result == 0, text(link));
+
+        version(Posix)
+        {
+            alias posixSymlink = core.sys.posix.unistd.symlink;
+            immutable int result = () @trusted {
+                return posixSymlink(oz, lz);
+            } ();
+            cenforce(result == 0, text(link));
+        }
+        else version(Windows)
+        {
+            import core.sys.windows.winbase: winSymlink = CreateSymbolicLinkA;
+                //TODO: wchar/dchar
+            immutable bool result = () @trusted {
+                immutable uint linkIsDir = isDir(link);
+                alias C = Unqual!(typeof(*lz.ptr));
+                return winSymlink(cast(C*) lz.ptr, cast(C*) oz.ptr, linkIsDir);
+            } ();
+            cenforce(result, text(link));
+        }
     }
 }
 
-version(Posix) @safe unittest
+
+@safe unittest
 {
     if (system_directory.exists)
     {
